@@ -50,6 +50,9 @@ copyfiles:
 fig:
 	curl -L https://github.com/docker/fig/releases/download/1.0.1/fig-`uname -s`-`uname -m` > /usr/local/bin/fig; chmod +x /usr/local/bin/fig
 
+shyaml:
+	curl -L https://raw.githubusercontent.com/0k/shyaml/master/shyaml > /usr/local/bin/shyaml; chmod +x /usr/local/bin/shyaml
+
 addman:
 	mkdir -p /usr/local/share/man/man1
 	help2man -Nh help -v version -n "configure and get information from your dokku installation" -o /usr/local/share/man/man1/dokku.1 dokku
@@ -64,7 +67,7 @@ plugin-dependencies: pluginhook
 plugins: pluginhook docker
 	dokku plugins-install
 
-dependencies: sshcommand pluginhook docker stack help2man fig
+dependencies: sshcommand pluginhook docker stack help2man fig shyaml
 
 help2man:
 	apt-get install -qq -y help2man
