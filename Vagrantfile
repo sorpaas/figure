@@ -32,7 +32,7 @@ Vagrant::configure("2") do |config|
   config.vm.define "empty", autostart: false
 
   config.vm.define "dokku", primary: true do |vm|
-    vm.vm.network :forwarded_port, guest: 80, host: 8080
+    vm.vm.network :forwarded_port, guest: 80, host: 8085
     vm.vm.hostname = "#{DOKKU_DOMAIN}"
     vm.vm.network :private_network, ip: DOKKU_IP
     vm.vm.provision :shell, :inline => "apt-get -qq -y install git > /dev/null && cd /root/dokku && #{make_cmd}"
@@ -40,7 +40,7 @@ Vagrant::configure("2") do |config|
   end
 
   config.vm.define "dokku-deb", autostart: false do |vm|
-    vm.vm.network :forwarded_port, guest: 80, host: 8080
+    vm.vm.network :forwarded_port, guest: 80, host: 8085
     vm.vm.hostname = "#{DOKKU_DOMAIN}"
     vm.vm.network :private_network, ip: DOKKU_IP
     vm.vm.provision :shell, :inline => "cd /root/dokku && make install-from-deb"

@@ -43,23 +43,21 @@ case "$1" in
     echo "-----> Deploying $APP ..."
     dokku deploy $APP
     echo "=====> Application deployed:"
-         dokku urls $APP | sed "s/^/       /"
+    dokku urls $APP | sed "s/^/       /"
     echo
     ;;
 
   build)
     APP="$2"; IMAGE="dokku/$APP"; CACHE_DIR="$DOKKU_ROOT/$APP/cache"
-    id=$(cat | docker run -i -a stdin $DOKKU_IMAGE /bin/bash -c "mkdir -p /app && tar -xC /app")
-    test "$(docker wait $id)" -eq 0
-    docker commit $id $IMAGE > /dev/null
-    [[ -d $CACHE_DIR ]] || mkdir $CACHE_DIR
+    APP_DIR="$DOKKU_ROOT/$APP/app"
+
+    rm -rf $APP_DIR
+    mkdir -p $APP_DIR
+    cat | tar -xC $APP_DIR
+
     pluginhook pre-build $APP
 
-    DOCKER_ARGS=$(: | pluginhook docker-args $APP build)
-    id=$(docker run -d -v $CACHE_DIR:/cache -e CACHE_PATH=/cache $DOCKER_ARGS $IMAGE /build/builder)
-    docker attach $id
-    test "$(docker wait $id)" -eq 0
-    docker commit $id $IMAGE > /dev/null
+    cd $APP_DIR && fig build
 
     pluginhook post-build $APP
     ;;
@@ -67,73 +65,70 @@ case "$1" in
   release)
     APP="$2"; IMAGE="dokku/$APP"
     pluginhook pre-release $APP
-    if [[ -f "$DOKKU_ROOT/$APP/ENV" ]]; then
-      id=$(docker run -i -a stdin $IMAGE /bin/bash -c "mkdir -p /app/.profile.d && cat > /app/.profile.d/app-env.sh" < "$DOKKU_ROOT/$APP/ENV")
-      test "$(docker wait $id)" -eq 0
-      docker commit $id $IMAGE > /dev/null
-    fi
+    # Modify fig.yml file
     pluginhook post-release $APP
     ;;
 
   deploy)
-    APP="$2"; IMAGE="dokku/$APP"
+    APP="$2"; IMAGE="dokku/$APP"; $APP_DIR="$DOKKU_ROOT/$APP/app"
     pluginhook pre-deploy $APP
 
-    if [[ -f "$DOKKU_ROOT/$APP/CONTAINER" ]]; then
-      oldid=$(< "$DOKKU_ROOT/$APP/CONTAINER")
-    fi
+    cd $APP_DIR && fig up
+
+    # if [[ -f "$DOKKU_ROOT/$APP/CONTAINER" ]]; then
+    #   oldid=$(< "$DOKKU_ROOT/$APP/CONTAINER")
+    # fi
 
     # start the app
-    DOCKER_ARGS=$(: | pluginhook docker-args $APP deploy)
-    BIND_EXTERNAL=$(pluginhook bind-external-ip $APP)
+    # BIND_EXTERNAL=$(pluginhook bind-external-ip $APP)
 
-    if [[ "$BIND_EXTERNAL" = "false" ]];then
-      port=5000
-      id=$(docker run -d -e PORT=$port $DOCKER_ARGS $IMAGE /bin/bash -c "/start web")
-      ipaddr=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' $id)
-    else
-      id=$(docker run -d -p 5000 -e PORT=5000 $DOCKER_ARGS $IMAGE /bin/bash -c "/start web")
-      port=$(docker port $id 5000 | sed 's/[0-9.]*://')
-      ipaddr=127.0.0.1
-    fi
-    echo $ipaddr > "$DOKKU_ROOT/$APP/IP"
+    # if [[ "$BIND_EXTERNAL" = "false" ]];then
+    #   port=5000
+    #   id=$(docker run -d -e PORT=$port $DOCKER_ARGS $IMAGE /bin/bash -c "/start web")
+    #   ipaddr=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' $id)
+    # else
+    #   id=$(docker run -d -p 5000 -e PORT=5000 $DOCKER_ARGS $IMAGE /bin/bash -c "/start web")
+    #   port=$(docker port $id 5000 | sed 's/[0-9.]*://')
+    #   ipaddr=127.0.0.1
+    # fi
+    # echo $ipaddr > "$DOKKU_ROOT/$APP/IP"
 
     # if we can't post-deploy successfully, kill new container
-    function kill_new {
-      docker inspect $id &> /dev/null && docker kill $id > /dev/null
-      trap - INT TERM EXIT
-      kill -9 $$
-    }
+    # function kill_new {
+    #   docker inspect $id &> /dev/null && docker kill $id > /dev/null
+    #   trap - INT TERM EXIT
+    #   kill -9 $$
+    # }
 
     # run checks first, then post-deploy hooks, which switches Nginx traffic
-    trap kill_new INT TERM EXIT
-    echo "-----> Running pre-flight checks"
-    pluginhook check-deploy $id $APP $port ${ipaddr:-localhost}
+    # trap kill_new INT TERM EXIT
+    # echo "-----> Running pre-flight checks"
+    # pluginhook check-deploy $id $APP $port ${ipaddr:-localhost}
 
     # now using the new container
-    echo $id > "$DOKKU_ROOT/$APP/CONTAINER"
-    echo $port > "$DOKKU_ROOT/$APP/PORT"
-    echo "http://$(< "$DOKKU_ROOT/HOSTNAME"):$port" > "$DOKKU_ROOT/$APP/URL"
+    # echo $id > "$DOKKU_ROOT/$APP/CONTAINER"
+    # echo $port > "$DOKKU_ROOT/$APP/PORT"
+    # echo "http://$(< "$DOKKU_ROOT/HOSTNAME"):$port" > "$DOKKU_ROOT/$APP/URL"
 
-    echo "-----> Running post-deploy"
+    # echo "-----> Running post-deploy"
     pluginhook post-deploy  $APP $port $ipaddr
     trap -        INT TERM EXIT
 
     # kill the old container
-    if [[ -n "$oldid" ]]; then
-      # Let the old container finish processing requests, before terminating it
-      WAIT="${DOKKU_WAIT_TO_RETIRE:-60}"
-      echo "-----> Shutting down old container in $WAIT seconds"
-      (
-        exec >/dev/null 2>/dev/null </dev/null
-        trap '' INT HUP
-        sleep $WAIT
-        docker kill $oldid
-      ) & disown -a
-      # Use trap since disown/nohup don't seem to keep child alive
-      # Give child process just enough time to set the traps
-      sleep 0.1
-    fi
+    # if [[ -n "$oldid" ]]; then
+    #   # Let the old container finish processing requests, before terminating it
+    #   WAIT="${DOKKU_WAIT_TO_RETIRE:-60}"
+    #   echo "-----> Shutting down old container in $WAIT seconds"
+    #   (
+    #     exec >/dev/null 2>/dev/null </dev/null
+    #     trap '' INT HUP
+    #     sleep $WAIT
+    #     docker kill $oldid
+    #   ) & disown -a
+    #   # Use trap since disown/nohup don't seem to keep child alive
+    #   # Give child process just enough time to set the traps
+    #   sleep 0.1
+    # fi
 
     ;;
 

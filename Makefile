@@ -47,6 +47,9 @@ copyfiles:
 		done
 	$(MAKE) addman
 
+fig:
+	curl -L https://github.com/docker/fig/releases/download/1.0.1/fig-`uname -s`-`uname -m` > /usr/local/bin/fig; chmod +x /usr/local/bin/fig
+
 addman:
 	mkdir -p /usr/local/share/man/man1
 	help2man -Nh help -v version -n "configure and get information from your dokku installation" -o /usr/local/share/man/man1/dokku.1 dokku
@@ -61,7 +64,7 @@ plugin-dependencies: pluginhook
 plugins: pluginhook docker
 	dokku plugins-install
 
-dependencies: sshcommand pluginhook docker stack help2man
+dependencies: sshcommand pluginhook docker stack help2man fig
 
 help2man:
 	apt-get install -qq -y help2man
@@ -126,4 +129,3 @@ vagrant-acl-add:
 
 vagrant-dokku:
 	vagrant ssh -- "sudo -H -u root bash -c 'dokku $(RUN_ARGS)'"
-
