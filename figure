@@ -78,7 +78,7 @@ case "$1" in
 
     echo "http://$(< "$FIGURE_ROOT/HOSTNAME"):$port" > "$FIGURE_ROOT/$APP/URL"
 
-    # echo "-----> Running post-deploy"
+    echo "-----> Running post-deploy"
     pluginhook post-deploy  $APP $port $ipaddr
     trap -        INT TERM EXIT
 
