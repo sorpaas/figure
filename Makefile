@@ -19,7 +19,7 @@ endif
 all:
 	# Type "make install" to install.
 
-install: dependencies stack copyfiles plugin-dependencies plugins version
+install: dependencies copyfiles plugin-dependencies plugins version
 
 release: deb-all package_cloud packer
 
@@ -57,7 +57,7 @@ plugin-dependencies: pluginhook
 plugins: pluginhook docker
 	figure plugins-install
 
-dependencies: sshcommand pluginhook docker stack help2man fig shyaml
+dependencies: sshcommand pluginhook docker help2man fig shyaml
 
 help2man:
 	apt-get install -qq -y help2man
@@ -88,14 +88,6 @@ endif
 aufs:
 ifndef CI
 	lsmod | grep aufs || modprobe aufs || apt-get install -qq -y linux-image-extra-`uname -r` > /dev/null
-endif
-
-stack:
-	@echo "Start building buildstep"
-ifdef BUILD_STACK
-	@docker images | grep progrium/buildstep || (git clone ${STACK_URL} /tmp/buildstep && docker build -t progrium/buildstep /tmp/buildstep && rm -rf /tmp/buildstep)
-else
-	@docker images | grep progrium/buildstep || curl --silent -L ${PREBUILT_STACK_URL} | gunzip -cd | docker import - progrium/buildstep
 endif
 
 count:
