@@ -34,6 +34,7 @@ fi
 case "$1" in
   receive)
     APP="$2"
+
     echo "-----> Cleaning up ..."
     figure cleanup
     echo "-----> Building $APP ..."
@@ -92,7 +93,7 @@ case "$1" in
 
   cleanup)
     # delete all non-running container
-    docker ps -a | grep 'Exit' | awk '{print $1}' | xargs docker rm &> /dev/null
+    docker ps -a | grep 'Exit' | awk '{print $1}' | xargs docker rm &> /dev/null || true
     ;;
 
   plugins)
