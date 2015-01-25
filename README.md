@@ -6,7 +6,7 @@ A mini-Heroku inspired by [Dokku](https://github.com/progrium/dokku) and [Fig](h
 
 This project started as a fork of [Dokku](https://github.com/progrium/dokku). Instead of just deploying 12-factor apps, with the limitation of one single server, stateful apps should be accepted. Therefore, Figure uses Fig to do all internal work, which means you can have exactly same environments for development and for production.
 
-## Installiation
+## Installation
 
 The current version of Figure only supports Ubuntu. To install it on your server:
 
