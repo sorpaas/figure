@@ -55,7 +55,8 @@ case "$1" in
 
     pluginhook pre-build $APP
 
-    cd $APP_DIR && fig build
+    FIG_ARGS=$(: | pluginhook fig-args $APP build)
+    cd $APP_DIR && fig $FIG_ARGS build
 
     pluginhook post-build $APP
     ;;
@@ -64,8 +65,8 @@ case "$1" in
     APP="$2"; APP_DIR="$FIGURE_ROOT/$APP/app"
     pluginhook pre-deploy $APP
 
-    cd $APP_DIR
-    fig up -d
+    FIG_ARGS=$(: | pluginhook fig-args $APP up)
+    cd $APP_DIR && fig $FIG_ARGS up -d
 
     expose_port=$(cat fig.yml | shyaml get-value web.ports.0)
     IFS=':' read -a expose_port_arr <<< $expose_port

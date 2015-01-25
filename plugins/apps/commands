@@ -38,12 +38,6 @@ case "$1" in
     echo "Destroying $APP (including all add-ons)"
 
     pluginhook pre-delete $APP
-    if [[ -f "$FIGURE_ROOT/$APP/CONTAINER" ]]; then
-      ID=$(< "$FIGURE_ROOT/$APP/CONTAINER")
-
-      docker stop $ID > /dev/null || true
-      docker rm $ID  > /dev/null || true
-    fi
 
     docker images | grep $IMAGE | awk '{print $3}' | xargs docker rmi &> /dev/null &
 

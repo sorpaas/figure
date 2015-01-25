@@ -29,7 +29,8 @@ case "$1" in
     [[ ! -d "$FIGURE_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
     APP="$2"; APP_DIR="$FIGURE_ROOT/$APP"
 
-    cd $APP_DIR && fig logs
+    FIG_ARGS=$(: | pluginhook fig-args $APP build)
+    cd $APP_DIR && fig $FIG_ARGS logs
     ;;
 
   run)
@@ -39,7 +40,8 @@ case "$1" in
     APP="$2"; APP_DIR="$FIGURE_ROOT/$APP"; CONTAINER="$3"
 
     shift 3
-    cd $APP_DIR && fig run $CONTAINER "$@"
+    FIG_ARGS=$(: | pluginhook fig-args $APP build)
+    cd $APP_DIR && fig $FIG_ARGS run $CONTAINER "$@"
     ;;
 
   url | urls)
