@@ -7,7 +7,7 @@ require 'yaml'
 @env_config_url = "#{ENV['FIGURE_ROOT']}/#{ARGV[0]}/ENV"
 
 if not File.exists? @fig_config_url
-  abort "-----> No fig.yml file found. Deployment failed."
+  abort "No fig.yml file found. Deployment failed."
 end
 
 @config = YAML.load(File.read(@fig_config_url))
@@ -28,7 +28,7 @@ end
       external_location = locations[1]
 
       if not external_location.start_with? "/"
-        abort "       External location must start with /. Deployment failed."
+        abort "External location must start with /. Deployment failed."
       end
 
       internal_location = "#{ENV['FIGURE_ROOT']}/#{ARGV[0]}/volumes/#{container_name}#{external_location}"
@@ -46,7 +46,7 @@ end
       env_content = env.split(" ")[1]
 
       if not env_keyword == "export"
-        abort "       Bad ENV file. Deployment failed."
+        abort "Bad ENV file. Deployment failed."
       end
 
       env_name = env_content.partition("=").first
@@ -71,7 +71,7 @@ end
           container_config["environment"] << env_content
         end
       else
-        abort "       Bad ENV file. Deployment failed."
+        abort "Bad ENV file. Deployment failed."
       end
     end
   end

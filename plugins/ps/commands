@@ -1,21 +1,6 @@
 #!/usr/bin/env bash
 set -eo pipefail; [[ $FIGURE_TRACE ]] && set -x
 
-release_and_deploy() {
-  local APP="$1";
-
-  if [[ -f "$FIGURE_ROOT/$APP/CONTAINER" ]]; then
-    echo "-----> Releasing $APP ..."
-    figure release $APP
-    echo "-----> Release complete!"
-    echo "-----> Deploying $APP ..."
-    figure deploy $APP
-    echo "=====> Application deployed:"
-    figure urls $APP | sed "s/^/       /"
-    echo
-  fi
-}
-
 case "$1" in
   ps)
     [[ -z $2 ]] && echo "Please specify an app to run the command on" && exit 1
