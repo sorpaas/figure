@@ -56,7 +56,12 @@ case "$1" in
     pluginhook pre-build $APP
 
     FIG_ARGS=$(: | pluginhook fig-args $APP build)
-    cd $APP_DIR && fig $FIG_ARGS build
+    echo "       Building docker images, it may take some time ..."
+    cd $APP_DIR && fig $FIG_ARGS build > /dev/null
+
+    FIG_ARGS=$(: | pluginhook fig-args $APP pull)
+    echo "       Pulling service images, it may take some time ..."
+    cd $APP_DIR && fig $FIG_ARGS pull > /dev/null
 
     pluginhook post-build $APP
     ;;
