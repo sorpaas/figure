@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -eo pipefail; [[ $FIGURE_TRACE ]] && set -x
+
+APP="$1";
+
+figure ps:stop $APP
