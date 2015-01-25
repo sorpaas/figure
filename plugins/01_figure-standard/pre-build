@@ -1,0 +1,6 @@
+#!/bin/bash
+
+APP="$1"; APP_DIR="$FIGURE_ROOT/$APP/app"
+
+echo "Reset timestamps on git working directory files ..."
+find $APP_DIR | xargs touch -t 200001010000.00
