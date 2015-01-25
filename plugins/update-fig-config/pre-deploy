@@ -1,0 +1,82 @@
+#!/usr/bin/env ruby
+
+require 'yaml'
+
+@app_url = "#{ENV['FIGURE_ROOT']}/#{ARGV[0]}"
+@fig_config_url = "#{@app_url}/app/fig.yml"
+@env_config_url = "#{@app_url}/ENV"
+
+if not File.exists? @fig_config_url
+  abort "-----> No fig.yml file found. Deployment failed."
+end
+
+@config = YAML.load(File.read(@fig_config_url))
+
+@config.each do |container_name, container_config|
+  # Update ports to expose to a random port
+  if container_config["ports"]
+    container_config["ports"] = container_config["ports"].map do |x|
+      x.split(":").last
+    end
+  end
+
+  # Update volumes to mount in a specific location
+  if container_config["volumes"]
+    container_config["volumes"] = container_config["volumes"].map do |x|
+      locations = x.split(":")
+      internal_location = locations[0]
+      external_location = locations[1]
+
+      if not external_location.start_with? "/"
+        abort "       External location must start with /. Deployment failed."
+      end
+
+      internal_location = "#{@app_url}/#{container_name}#{external_location}"
+      `mkdir -p #{internal_location}`
+
+      "#{internal_location}:#{external_location}"
+    end
+  end
+
+  # Read ENV file and insert then into fig config
+  if File.exists? @env_config_url
+    File.read(@env_config_url).each_line do |env|
+      container_config["environment"] ||= []
+      env_keyword = env.split(" ")[0]
+      env_content = env.split(" ")[1]
+
+      if not env_keyword == "export"
+        abort "       Bad ENV file. Deployment failed."
+      end
+
+      env_name = env_content.partition("=").first
+      env_value = env_content.partition("=").last
+
+      if env_value.start_with? "'" and env_value.end_with? "'"
+        env_value = env_value[1..-2]
+      end
+
+      if container_config["environment"].instance_of? Hash
+        container_config["environment"][env_name] = env_value
+      elsif container_config["environment"].instance_of? Array
+        added = false
+        container_config["environment"].each_index do |i|
+          container_env_name = container_config["environment"][i].partition("=").first
+          if container_env_name == env_name
+            container_config["environment"][i] = env_content
+            added = true
+          end
+        end
+        if not added
+          container_config["environment"] << env_content
+        end
+      else
+        abort "       Bad ENV file. Deployment failed."
+      end
+    end
+  end
+end
+
+File.open(@fig_config_url, "w") do |f|
+  f.write(YAML.dump(@config))
+end
