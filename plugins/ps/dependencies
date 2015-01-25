@@ -6,6 +6,11 @@ case "$FIGURE_DISTRO" in
     export DEBIAN_FRONTEND=noninteractive
     apt-get update
     apt-get install -y supervisor
+
+    DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+    cp $DIR/supervisord.conf /etc/supervisor/supervisord.conf
+    chown -R root:docker /etc/supervisor
+    chmod -R 0770 /etc/supervisor
     ;;
 
   opensuse)
