@@ -38,8 +38,6 @@ case "$1" in
     figure cleanup
     echo "-----> Building $APP ..."
     cat | figure build $APP
-    echo "-----> Releasing $APP ..."
-    figure release $APP
     echo "-----> Deploying $APP ..."
     figure deploy $APP
     echo "=====> Application deployed:"
@@ -60,17 +58,6 @@ case "$1" in
     cd $APP_DIR && fig build
 
     pluginhook post-build $APP
-    ;;
-
-  release)
-    APP="$2"
-    pluginhook pre-release $APP
-    # Modify fig.yml file
-
-    # Update envs
-    # Update ports
-    # Update volumes
-    pluginhook post-release $APP
     ;;
 
   deploy)
