@@ -50,18 +50,18 @@ case "$1" in
     APP="$2"; CACHE_DIR="$FIGURE_ROOT/$APP/cache"
     APP_DIR="$FIGURE_ROOT/$APP/app"
 
-    rm -rf $APP_DIR
+    sudo rm -rf $APP_DIR
     mkdir -p $APP_DIR
     cat | tar -xC $APP_DIR
 
     pluginhook pre-build $APP
 
     FIG_ARGS=$(: | pluginhook fig-args $APP build)
-    echo "       Building docker images, it may take some time ..."
+    echo "Building docker images, it may take some time ..."
     cd $APP_DIR && fig $FIG_ARGS build > /dev/null
 
     FIG_ARGS=$(: | pluginhook fig-args $APP pull)
-    echo "       Pulling service images, it may take some time ..."
+    echo "Pulling service images, it may take some time ..."
     cd $APP_DIR && fig $FIG_ARGS pull > /dev/null
 
     pluginhook post-build $APP
@@ -72,13 +72,19 @@ case "$1" in
     pluginhook pre-deploy $APP
 
     figure ps:restart $APP
-    sleep 5
+
+    cd $APP_DIR
 
     expose_port=$(cat fig.yml | shyaml get-value web.ports.0)
     IFS=':' read -a expose_port_arr <<< $expose_port
     private_port=${expose_port_arr[${#expose_port_arr[@]}-1]}
 
-    ipaddr_port=$(fig port web $private_port)
+    FIG_ARGS=$(: | pluginhook fig-args $APP port)
+    until fig $FIG_ARGS port web $private_port; do
+        echo "Process not started. Retrying ..."
+        sleep 2
+    done
+    ipaddr_port=$(fig $FIG_ARGS port web $private_port)
     IFS=':' read -a ipaddr_port_arr <<< $ipaddr_port
     ipaddr="127.0.0.1"
     port=${ipaddr_port_arr[1]}

@@ -18,6 +18,8 @@ case "$1" in
 
     APP="$2"; APP_DIR="$FIGURE_ROOT/$APP/app"
 
+    rm -f /etc/supervisor/conf.d/figure-$APP.conf
+
     FIG_ARGS=$(: | pluginhook fig-args $APP up)
     cat << CONF >> /etc/supervisor/conf.d/figure-$APP.conf
 [program:figure-${APP}]
@@ -25,6 +27,7 @@ command=/bin/bash -c 'cd ${APP_DIR} && fig ${FIG_ARGS} up'
 autostart=true
 autorestart=true
 stopsignal=QUIT
+user=figure
 
 CONF
 
@@ -40,7 +43,7 @@ CONF
 
     figure ps:config $APP
 
-    supervisorctl start $APP
+    supervisorctl start figure-$APP
     ;;
 
   ps:stop)
@@ -50,7 +53,7 @@ CONF
     APP="$2";
 
     rm -f /etc/supervisor/conf.d/figure-$APP.conf
-    supervisorctl stop $APP
+    supervisorctl stop figure-$APP
     supervisorctl reread
     supervisorctl update
     ;;
@@ -59,11 +62,16 @@ CONF
     [[ -z $2 ]] && echo "Please specify an app to run the command on" && exit 1
     [[ ! -d "$FIGURE_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
 
-    APP="$2";
+    APP="$2"; APP_DIR="$FIGURE_ROOT/$APP/app"
 
     figure ps:config $APP
 
-    supervisorctl restart $APP
+    supervisorctl stop figure-$APP
+
+    FIG_ARGS=$(: | pluginhook fig-args $APP stop)
+    cd $APP_DIR && fig $FIG_ARGS stop
+
+    supervisorctl start figure-$APP
     ;;
 
   ps:restartall)

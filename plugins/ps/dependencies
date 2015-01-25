@@ -11,6 +11,8 @@ case "$FIGURE_DISTRO" in
     cp $DIR/supervisord.conf /etc/supervisor/supervisord.conf
     chown -R root:docker /etc/supervisor
     chmod -R 0770 /etc/supervisor
+
+    service supervisor restart
     ;;
 
   opensuse)

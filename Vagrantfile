@@ -3,7 +3,7 @@
 
 BOX_NAME = ENV["BOX_NAME"] || "trusty"
 BOX_URI = ENV["BOX_URI"] || "https://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-amd64-vagrant-disk1.box"
-BOX_MEMORY = ENV["BOX_MEMORY"] || "1024"
+BOX_MEMORY = ENV["BOX_MEMORY"] || "2048"
 FIGURE_DOMAIN = ENV["FIGURE_DOMAIN"] || "figure.me"
 FIGURE_IP = ENV["FIGURE_IP"] || "10.0.0.2"
 PREBUILT_STACK_URL = File.exist?("#{File.dirname(__FILE__)}/stack.tgz") ? 'file:///root/figure/stack.tgz' : nil

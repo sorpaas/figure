@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -eo pipefail; [[ $FIGURE_TRACE ]] && set -x
 
-[[ -n $1 ]] && rm -r "$FIGURE_ROOT/$1" > /dev/null
+[[ -n $1 ]] && sudo rm -r "$FIGURE_ROOT/$1" > /dev/null

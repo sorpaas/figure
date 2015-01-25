@@ -22,6 +22,10 @@ end
 
   # Update volumes to mount in a specific location
   if container_config["volumes"]
+    container_config["volumes"].delete_if do |x|
+      x.split(":")[0] == "."
+    end
+
     container_config["volumes"] = container_config["volumes"].map do |x|
       locations = x.split(":")
       internal_location = locations[0]
