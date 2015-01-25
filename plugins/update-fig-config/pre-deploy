@@ -2,9 +2,9 @@
 
 require 'yaml'
 
-@app_url = "#{ENV['FIGURE_ROOT']}/#{ARGV[0]}"
-@fig_config_url = "#{@app_url}/app/fig.yml"
-@env_config_url = "#{@app_url}/ENV"
+@app_url = "#{ENV['FIGURE_ROOT']}/#{ARGV[0]}/app"
+@fig_config_url = "#{@app_url}/fig.yml"
+@env_config_url = "#{ENV['FIGURE_ROOT']}/#{ARGV[0]}/ENV"
 
 if not File.exists? @fig_config_url
   abort "-----> No fig.yml file found. Deployment failed."
@@ -31,7 +31,7 @@ end
         abort "       External location must start with /. Deployment failed."
       end
 
-      internal_location = "#{@app_url}/#{container_name}#{external_location}"
+      internal_location = "#{ENV['FIGURE_ROOT']}/#{ARGV[0]}/volumes/#{container_name}#{external_location}"
       `mkdir -p #{internal_location}`
 
       "#{internal_location}:#{external_location}"

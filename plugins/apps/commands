@@ -39,8 +39,6 @@ case "$1" in
 
     pluginhook pre-delete $APP
 
-    docker images | grep $IMAGE | awk '{print $3}' | xargs docker rmi &> /dev/null &
-
     pluginhook post-delete $APP
     ;;
 

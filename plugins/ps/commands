@@ -21,50 +21,65 @@ case "$1" in
     [[ -z $2 ]] && echo "Please specify an app to run the command on" && exit 1
     [[ ! -d "$FIGURE_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
 
-    APP="$2"; [[ -f "$FIGURE_ROOT/$APP/CONTAINER" ]] && CONTAINER_ID=$(< "$FIGURE_ROOT/$APP/CONTAINER")
-    [[ -z "$CONTAINER_ID" ]] && echo "App $APP has not been deployed" && exit 0
+    APP="$2"; APP_DIR="$FIGURE_ROOT/$APP/app"
 
-    docker exec -ti "$CONTAINER_ID" /bin/bash -c "ps auxwww"
-  ;;
+    FIG_ARGS=$(: | pluginhook fig-args $APP ps)
+    cd $APP_DIR && fig $FIG_ARGS ps
+    ;;
+
+  ps:config)
+    [[ -z $2 ]] && echo "Please specify an app to run the command on" && exit 1
+    [[ ! -d "$FIGURE_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
+
+    APP="$2"; APP_DIR="$FIGURE_ROOT/$APP/app"
+
+    FIG_ARGS=$(: | pluginhook fig-args $APP up)
+    cat << CONF >> /etc/supervisor/conf.d/figure-$APP.conf
+[program:figure-${APP}]
+command=/bin/bash -c 'cd ${APP_DIR} && fig ${FIG_ARGS} up'
+autostart=true
+autorestart=true
+stopsignal=QUIT
+
+CONF
+
+    supervisorctl reread
+    supervisorctl update
+    ;;
 
   ps:start)
     [[ -z $2 ]] && echo "Please specify an app to run the command on" && exit 1
     [[ ! -d "$FIGURE_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
 
-    APP="$2"; [[ -f "$FIGURE_ROOT/$APP/CONTAINER" ]] && CONTAINER_ID=$(< "$FIGURE_ROOT/$APP/CONTAINER")
-    [[ -z "$CONTAINER_ID" ]] && echo "App $APP has not been deployed" && exit 0
+    APP="$2"; APP_DIR="$FIGURE_ROOT/$APP/app"
 
-    if [[ "$(docker ps -q --no-trunc| grep -q $CONTAINER_ID; echo $?)" != "0" ]]; then
-      release_and_deploy $APP
-    else
-      echo "App $APP already running"
-    fi
-  ;;
+    figure ps:config $APP
+
+    supervisorctl start $APP
+    ;;
 
   ps:stop)
     [[ -z $2 ]] && echo "Please specify an app to run the command on" && exit 1
     [[ ! -d "$FIGURE_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
 
-    APP="$2"; [[ -f "$FIGURE_ROOT/$APP/CONTAINER" ]] && CONTAINER_ID=$(< "$FIGURE_ROOT/$APP/CONTAINER")
-    [[ -z "$CONTAINER_ID" ]] && echo "App $APP has not been deployed" && exit 0
+    APP="$2";
 
-    if [[ "$(docker ps -q --no-trunc| grep -q $CONTAINER_ID; echo $?)" = "0" ]]; then
-      echo "Stopping $APP ..."
-      docker stop $CONTAINER_ID > /dev/null
-    else
-      echo "App $APP already stopped"
-    fi
-  ;;
+    rm -f /etc/supervisor/conf.d/figure-$APP.conf
+    supervisorctl stop $APP
+    supervisorctl reread
+    supervisorctl update
+    ;;
 
   ps:restart)
     [[ -z $2 ]] && echo "Please specify an app to run the command on" && exit 1
     [[ ! -d "$FIGURE_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
 
-    APP="$2"; [[ -f "$FIGURE_ROOT/$APP/CONTAINER" ]] && CONTAINER_ID=$(< "$FIGURE_ROOT/$APP/CONTAINER")
-    [[ -z "$CONTAINER_ID" ]] && echo "App $APP has not been deployed" && exit 0
+    APP="$2";
 
-    release_and_deploy $APP
-  ;;
+    figure ps:config $APP
+
+    supervisorctl restart $APP
+    ;;
 
   ps:restartall)
     shopt -s nullglob
@@ -72,7 +87,7 @@ case "$1" in
       APP=$(basename "$(dirname $app)");
       figure ps:restart $APP
     done
-  ;;
+    ;;
 
   help | ps:help)
     cat && cat<<EOF

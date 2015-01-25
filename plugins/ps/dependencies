@@ -1,0 +1,15 @@
+#!/bin/bash
+set -eo pipefail; [[ $FIGURE_TRACE ]] && set -x
+
+case "$FIGURE_DISTRO" in
+  ubuntu)
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    apt-get install -y supervisor
+    ;;
+
+  opensuse)
+    zypper refresh
+    zypper install supervisor
+    ;;
+esac
