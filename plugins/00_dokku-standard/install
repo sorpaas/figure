@@ -1,43 +1,10 @@
 #!/usr/bin/env bash
-set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+set -eo pipefail; [[ $FIGURE_TRACE ]] && set -x
 
-if [[ ! -f  "$DOKKU_ROOT/HOSTNAME" ]]; then
-  hostname -f > $DOKKU_ROOT/HOSTNAME
+if [[ ! -f  "$FIGURE_ROOT/HOSTNAME" ]]; then
+  hostname -f > $FIGURE_ROOT/HOSTNAME
 fi
 
-if [[ ! -f  "$DOKKU_ROOT/VHOST" ]]; then
-  [[ $(dig +short "$(< "$DOKKU_ROOT/HOSTNAME")") ]] && cp "$DOKKU_ROOT/HOSTNAME" "$DOKKU_ROOT/VHOST"
+if [[ ! -f  "$FIGURE_ROOT/VHOST" ]]; then
+  [[ $(dig +short "$(< "$FIGURE_ROOT/HOSTNAME")") ]] && cp "$FIGURE_ROOT/HOSTNAME" "$FIGURE_ROOT/VHOST"
 fi
-
-# temporary hack for https://github.com/progrium/dokku/issues/82
-# redeploys all apps after a reboot
-case "$DOKKU_DISTRO" in
-  ubuntu)
-    cat<<EOF > /etc/init/dokku-redeploy.conf
-description "Dokku app redeploy service"
-
-start on (started docker)
-
-script
-  sleep 2 # give docker some time
-  sudo -i -u dokku /usr/local/bin/dokku ps:restartall
-end script
-EOF
-    ;;
-
-  opensuse)
-    cat<<EOF > /etc/systemd/system/dokku-redeploy.service
-[Unit]
-Description=Dokku app redeploy service
-After=docker.target
-
-[Service]
-Type=simple
-User=dokku
-ExecStart=/usr/local/bin/dokku ps:restartall
-
-[Install]
-WantedBy=multi-user.target
-EOF
-    ;;
-esac

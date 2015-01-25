@@ -4,9 +4,9 @@
 BOX_NAME = ENV["BOX_NAME"] || "trusty"
 BOX_URI = ENV["BOX_URI"] || "https://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-amd64-vagrant-disk1.box"
 BOX_MEMORY = ENV["BOX_MEMORY"] || "1024"
-DOKKU_DOMAIN = ENV["DOKKU_DOMAIN"] || "dokku.me"
-DOKKU_IP = ENV["DOKKU_IP"] || "10.0.0.2"
-PREBUILT_STACK_URL = File.exist?("#{File.dirname(__FILE__)}/stack.tgz") ? 'file:///root/dokku/stack.tgz' : nil
+FIGURE_DOMAIN = ENV["FIGURE_DOMAIN"] || "figure.me"
+FIGURE_IP = ENV["FIGURE_IP"] || "10.0.0.2"
+PREBUILT_STACK_URL = File.exist?("#{File.dirname(__FILE__)}/stack.tgz") ? 'file:///root/figure/stack.tgz' : nil
 PUBLIC_KEY_PATH = "#{Dir.home}/.ssh/id_rsa.pub"
 
 make_cmd = "make install"
@@ -19,7 +19,7 @@ Vagrant::configure("2") do |config|
 
   config.vm.box = BOX_NAME
   config.vm.box_url = BOX_URI
-  config.vm.synced_folder File.dirname(__FILE__), "/root/dokku"
+  config.vm.synced_folder File.dirname(__FILE__), "/root/figure"
 
   config.vm.provider :virtualbox do |vb|
     vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
@@ -31,23 +31,11 @@ Vagrant::configure("2") do |config|
 
   config.vm.define "empty", autostart: false
 
-  config.vm.define "dokku", primary: true do |vm|
+  config.vm.define "figure", primary: true do |vm|
     vm.vm.network :forwarded_port, guest: 80, host: 8085
-    vm.vm.hostname = "#{DOKKU_DOMAIN}"
-    vm.vm.network :private_network, ip: DOKKU_IP
-    vm.vm.provision :shell, :inline => "apt-get -qq -y install git > /dev/null && cd /root/dokku && #{make_cmd}"
-    vm.vm.provision :shell, :inline => "cd /root/dokku && make dokku-installer"
-  end
-
-  config.vm.define "dokku-deb", autostart: false do |vm|
-    vm.vm.network :forwarded_port, guest: 80, host: 8085
-    vm.vm.hostname = "#{DOKKU_DOMAIN}"
-    vm.vm.network :private_network, ip: DOKKU_IP
-    vm.vm.provision :shell, :inline => "cd /root/dokku && make install-from-deb"
-  end
-
-  config.vm.define "build", autostart: false do |vm|
-    vm.vm.provision :shell, :inline => "cd /root/dokku && make deb-all"
+    vm.vm.hostname = "#{FIGURE_DOMAIN}"
+    vm.vm.network :private_network, ip: FIGURE_IP
+    vm.vm.provision :shell, :inline => "apt-get -qq -y install git > /dev/null && cd /root/figure && #{make_cmd}"
   end
 
   if Pathname.new(PUBLIC_KEY_PATH).exist?

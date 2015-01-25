@@ -2,21 +2,21 @@
 set -eo pipefail
 shopt -s nullglob
 
-export DOKKU_DISTRO=${DOKKU_DISTRO:="ubuntu"}
-export DOKKU_IMAGE=${DOKKU_IMAGE:="progrium/buildstep"}
-export DOKKU_ROOT=${DOKKU_ROOT:=~dokku}
+export FIGURE_DISTRO=${FIGURE_DISTRO:="ubuntu"}
+export FIGURE_IMAGE=${FIGURE_IMAGE:="progrium/buildstep"}
+export FIGURE_ROOT=${FIGURE_ROOT:=~figure}
 
-export PLUGIN_PATH=${PLUGIN_PATH:="/var/lib/dokku/plugins"}
-export DOKKU_NOT_IMPLEMENTED_EXIT=10
-export DOKKU_VALID_EXIT=0
+export PLUGIN_PATH=${PLUGIN_PATH:="/var/lib/figure/plugins"}
+export FIGURE_NOT_IMPLEMENTED_EXIT=10
+export FIGURE_VALID_EXIT=0
 
-[[ -f $DOKKU_ROOT/dokkurc ]] && source $DOKKU_ROOT/dokkurc
-[[ -d $DOKKU_ROOT/.dokkurc ]] && for f in $DOKKU_ROOT/.dokkurc/*; do source $f; done
+[[ -f $FIGURE_ROOT/figurerc ]] && source $FIGURE_ROOT/figurerc
+[[ -d $FIGURE_ROOT/.figurerc ]] && for f in $FIGURE_ROOT/.figurerc/*; do source $f; done
 
-[[ $DOKKU_TRACE ]] && set -x
+[[ $FIGURE_TRACE ]] && set -x
 
-if [[ $(id -un) != "dokku" && $1 != plugins-install* && $1 != "plugins-update" ]]; then
-  sudo -u dokku -E -H $0 "$@"
+if [[ $(id -un) != "figure" && $1 != plugins-install* && $1 != "plugins-update" ]]; then
+  sudo -u figure -E -H $0 "$@"
   exit
 fi
 
@@ -33,23 +33,23 @@ fi
 
 case "$1" in
   receive)
-    APP="$2"; IMAGE="dokku/$APP"
-    # echo "-----> Cleaning up ..."
-    # dokku cleanup
+    APP="$2"
+    echo "-----> Cleaning up ..."
+    figure cleanup
     echo "-----> Building $APP ..."
-    cat | dokku build $APP
+    cat | figure build $APP
     echo "-----> Releasing $APP ..."
-    dokku release $APP
+    figure release $APP
     echo "-----> Deploying $APP ..."
-    dokku deploy $APP
+    figure deploy $APP
     echo "=====> Application deployed:"
-    dokku urls $APP | sed "s/^/       /"
+    figure urls $APP | sed "s/^/       /"
     echo
     ;;
 
   build)
-    APP="$2"; IMAGE="dokku/$APP"; CACHE_DIR="$DOKKU_ROOT/$APP/cache"
-    APP_DIR="$DOKKU_ROOT/$APP/app"
+    APP="$2"; CACHE_DIR="$FIGURE_ROOT/$APP/cache"
+    APP_DIR="$FIGURE_ROOT/$APP/app"
 
     rm -rf $APP_DIR
     mkdir -p $APP_DIR
@@ -63,7 +63,7 @@ case "$1" in
     ;;
 
   release)
-    APP="$2"; IMAGE="dokku/$APP"
+    APP="$2"
     pluginhook pre-release $APP
     # Modify fig.yml file
 
@@ -74,7 +74,7 @@ case "$1" in
     ;;
 
   deploy)
-    APP="$2"; IMAGE="dokku/$APP"; APP_DIR="$DOKKU_ROOT/$APP/app"
+    APP="$2"; APP_DIR="$FIGURE_ROOT/$APP/app"
     pluginhook pre-deploy $APP
 
     cd $APP_DIR
@@ -89,7 +89,7 @@ case "$1" in
     ipaddr="127.0.0.1"
     port=${ipaddr_port_arr[1]}
 
-    echo "http://$(< "$DOKKU_ROOT/HOSTNAME"):$port" > "$DOKKU_ROOT/$APP/URL"
+    echo "http://$(< "$FIGURE_ROOT/HOSTNAME"):$port" > "$FIGURE_ROOT/$APP/URL"
 
     # echo "-----> Running post-deploy"
     pluginhook post-deploy  $APP $port $ipaddr
@@ -99,9 +99,7 @@ case "$1" in
 
   cleanup)
     # delete all non-running container
-    docker ps -a | grep 'Exit' | awk '{print $1}' | xargs docker rm &> /dev/null &
-    # delete unused images
-    docker images | grep '<none>' | awk '{print $3}' | xargs docker rmi &> /dev/null &
+    docker ps -a | grep 'Exit' | awk '{print $1}' | xargs docker rm &> /dev/null
     ;;
 
   plugins)
@@ -120,14 +118,8 @@ case "$1" in
     pluginhook update
     ;;
 
-  # DEPRECATED as of v0.3.14
-  deploy:all)
-      echo "*DEPRECATED* in v0.3.14: deploy:all will be removed in future versions"
-      dokku ps:restartall
-    ;;
-
   help|'')
-    echo "Usage: dokku COMMAND <app> [command-specific-options]"
+    echo "Usage: figure COMMAND <app> [command-specific-options]"
     echo ""
     echo "Options:"
 
@@ -143,19 +135,19 @@ EOF
     implemented=0
     for script in $PLUGIN_PATH/*/commands; do
       set +e; $script "$@" ; exit_code=$? ; set -e
-      if [ "$exit_code" -eq "$DOKKU_NOT_IMPLEMENTED_EXIT" ]; then
+      if [ "$exit_code" -eq "$FIGURE_NOT_IMPLEMENTED_EXIT" ]; then
         continue
       fi
 
       implemented=1
-      if [ "$exit_code" -ne "$DOKKU_VALID_EXIT" ]; then
+      if [ "$exit_code" -ne "$FIGURE_VALID_EXIT" ]; then
         exit $exit_code
       fi
     done
 
     if [ "$implemented" -eq 0 ]; then
-      echo " !    \`$*\` is not a dokku command."
-      echo " !    See \`dokku help\` for a list of available commands."
+      echo " !    \`$*\` is not a figure command."
+      echo " !    See \`figure help\` for a list of available commands."
       exit 1
     fi
     ;;

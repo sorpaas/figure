@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+set -eo pipefail; [[ $FIGURE_TRACE ]] && set -x
 
 VERSION="$1"
 IMPORT_DIR="$2"

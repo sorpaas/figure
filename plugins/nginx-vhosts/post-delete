@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+set -eo pipefail; [[ $FIGURE_TRACE ]] && set -x
 
-case "$DOKKU_DISTRO" in
+case "$FIGURE_DISTRO" in
   ubuntu)
     sudo /etc/init.d/nginx reload > /dev/null
     ;;

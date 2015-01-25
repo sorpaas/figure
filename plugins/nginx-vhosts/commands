@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+set -eo pipefail; [[ $FIGURE_TRACE ]] && set -x
 
 restart_nginx () {
-  case "$DOKKU_DISTRO" in
+  case "$FIGURE_DISTRO" in
     ubuntu)
       sudo /etc/init.d/nginx reload > /dev/null
       ;;
@@ -15,21 +15,21 @@ restart_nginx () {
 
 case "$1" in
   nginx:build-config)
-    APP="$2"; DOKKU_APP_LISTEN_PORT="$3"; DOKKU_APP_LISTEN_IP="${4}"
-    VHOST_PATH="$DOKKU_ROOT/$APP/VHOST"
-    WILDCARD_SSL="$DOKKU_ROOT/tls"
-    SSL="$DOKKU_ROOT/$APP/tls"
+    APP="$2"; FIGURE_APP_LISTEN_PORT="$3"; FIGURE_APP_LISTEN_IP="${4}"
+    VHOST_PATH="$FIGURE_ROOT/$APP/VHOST"
+    WILDCARD_SSL="$FIGURE_ROOT/tls"
+    SSL="$FIGURE_ROOT/$APP/tls"
 
-    if [[ -z "$DOKKU_APP_LISTEN_PORT" ]] && [[ -f "$DOKKU_ROOT/$APP/PORT" ]]; then
-      DOKKU_APP_LISTEN_PORT=$(< "$DOKKU_ROOT/$APP/PORT")
+    if [[ -z "$FIGURE_APP_LISTEN_PORT" ]] && [[ -f "$FIGURE_ROOT/$APP/PORT" ]]; then
+      FIGURE_APP_LISTEN_PORT=$(< "$FIGURE_ROOT/$APP/PORT")
     fi
-    if [[ -z "$DOKKU_APP_LISTEN_IP" ]] && [[ -f "$DOKKU_ROOT/$APP/IP" ]]; then
-      DOKKU_APP_LISTEN_IP=$(< "$DOKKU_ROOT/$APP/IP")
+    if [[ -z "$FIGURE_APP_LISTEN_IP" ]] && [[ -f "$FIGURE_ROOT/$APP/IP" ]]; then
+      FIGURE_APP_LISTEN_IP=$(< "$FIGURE_ROOT/$APP/IP")
     fi
 
-    [[ -f "$DOKKU_ROOT/$APP/ENV" ]] && source $DOKKU_ROOT/$APP/ENV
+    [[ -f "$FIGURE_ROOT/$APP/ENV" ]] && source $FIGURE_ROOT/$APP/ENV
 
-    if [[ ! -n "$NO_VHOST" ]] && [[ -f "$DOKKU_ROOT/$APP/VHOST" ]]; then
+    if [[ ! -n "$NO_VHOST" ]] && [[ -f "$FIGURE_ROOT/$APP/VHOST" ]]; then
       NONSSL_VHOSTS=$(cat $VHOST_PATH)
       if [[ -e "$SSL/server.crt" ]] && [[ -e "$SSL/server.key" ]]; then
         SSL_INUSE="$SSL"
@@ -63,11 +63,11 @@ EOF
         while read line; do
           echo "-----> Configuring SSL for $line..."
           SSL_SERVER_NAME=$line
-          eval "cat <<< \"$(< $NGINX_CONF)\" >> $DOKKU_ROOT/$APP/nginx.conf"
+          eval "cat <<< \"$(< $NGINX_CONF)\" >> $FIGURE_ROOT/$APP/nginx.conf"
         done <<< "$SSL_VHOSTS"
       fi
 
-      APP_NGINX_TEMPLATE="$DOKKU_ROOT/$APP/nginx.conf.template"
+      APP_NGINX_TEMPLATE="$FIGURE_ROOT/$APP/nginx.conf.template"
       if [[ -f $APP_NGINX_TEMPLATE ]]; then
         echo "-----> Overriding default nginx.conf with detected nginx.conf.template"
         NGINX_CONF=$APP_NGINX_TEMPLATE
@@ -77,25 +77,25 @@ EOF
       # Include SSL_VHOSTS so we can redirect http to https on that hostname as well
       NOSSL_SERVER_NAME=$(echo $NONSSL_VHOSTS $SSL_VHOSTS| tr '\n' ' ')
 
-      if [[ -n "$DOKKU_APP_LISTEN_PORT" ]] && [[ -n "$DOKKU_APP_LISTEN_IP" ]]; then
+      if [[ -n "$FIGURE_APP_LISTEN_PORT" ]] && [[ -n "$FIGURE_APP_LISTEN_IP" ]]; then
         echo "-----> Creating $SCHEME nginx.conf"
-        echo "upstream $APP { server $DOKKU_APP_LISTEN_IP:$DOKKU_APP_LISTEN_PORT; }" > $DOKKU_ROOT/$APP/nginx.conf
-        eval "cat <<< \"$(< $NGINX_CONF)\" >> $DOKKU_ROOT/$APP/nginx.conf"
+        echo "upstream $APP { server $FIGURE_APP_LISTEN_IP:$FIGURE_APP_LISTEN_PORT; }" > $FIGURE_ROOT/$APP/nginx.conf
+        eval "cat <<< \"$(< $NGINX_CONF)\" >> $FIGURE_ROOT/$APP/nginx.conf"
 
         echo "-----> Running nginx-pre-reload"
-        pluginhook nginx-pre-reload $APP $DOKKU_APP_LISTEN_PORT $DOKKU_APP_LISTEN_IP
+        pluginhook nginx-pre-reload $APP $FIGURE_APP_LISTEN_PORT $FIGURE_APP_LISTEN_IP
 
         echo "       Reloading nginx"
         restart_nginx
       fi
     else
-      if [[ -f "$DOKKU_ROOT/$APP/VHOST" ]]; then
+      if [[ -f "$FIGURE_ROOT/$APP/VHOST" ]]; then
         echo "-----> VHOST support disabled, deleting $APP/VHOST"
-        rm "$DOKKU_ROOT/$APP/VHOST"
+        rm "$FIGURE_ROOT/$APP/VHOST"
       fi
-      if [[ -f "$DOKKU_ROOT/$APP/nginx.conf" ]]; then
+      if [[ -f "$FIGURE_ROOT/$APP/nginx.conf" ]]; then
         echo "-----> VHOST support disabled, deleting nginx.conf"
-        rm "$DOKKU_ROOT/$APP/nginx.conf"
+        rm "$FIGURE_ROOT/$APP/nginx.conf"
 
         echo "-----> VHOST support disabled, reloading nginx after nginx.conf deletion"
         restart_nginx
@@ -105,7 +105,7 @@ EOF
 
   nginx:import-ssl)
     [[ -z $2 ]] && echo "Please specify an app to run the command on" && exit 1
-    [[ ! -d "$DOKKU_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
+    [[ ! -d "$FIGURE_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
     [[ -t 0 ]] && echo "Tar archive containing server.crt and server.key expected on stdin" && exit 1
     APP="$2"
 
@@ -115,12 +115,12 @@ EOF
     [[ ! -f "$TEMP_DIR/server.crt" ]] && echo "Tar archive missing server.crt" && exit 1
     [[ ! -f "$TEMP_DIR/server.key" ]] && echo "Tar archive missing server.key" && exit 1
 
-    mkdir -p "$DOKKU_ROOT/$APP/tls"
-    mv "$TEMP_DIR/server.crt" "$DOKKU_ROOT/$APP/tls/server.crt"
-    mv "$TEMP_DIR/server.key" "$DOKKU_ROOT/$APP/tls/server.key"
-    cd $DOKKU_ROOT
+    mkdir -p "$FIGURE_ROOT/$APP/tls"
+    mv "$TEMP_DIR/server.crt" "$FIGURE_ROOT/$APP/tls/server.crt"
+    mv "$TEMP_DIR/server.key" "$FIGURE_ROOT/$APP/tls/server.key"
+    cd $FIGURE_ROOT
     rm -rf $TEMP_DIR
-    dokku nginx:build-config $APP
+    figure nginx:build-config $APP
     ;;
 
   help | nginx:help)
@@ -131,7 +131,7 @@ EOF
     ;;
 
   *)
-    exit $DOKKU_NOT_IMPLEMENTED_EXIT
+    exit $FIGURE_NOT_IMPLEMENTED_EXIT
     ;;
 
 esac

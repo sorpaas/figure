@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+set -eo pipefail; [[ $FIGURE_TRACE ]] && set -x
 
 shopt -s nullglob
 VERSION="$1"

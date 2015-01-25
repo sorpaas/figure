@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
 set -eo pipefail; [[ $FIGURE_TRACE ]] && set -x
 
-APP="$1"
-
-figure nginx:build-config $APP
+[[ -n $1 ]] && rm -r "$FIGURE_ROOT/$1" > /dev/null

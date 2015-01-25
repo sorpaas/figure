@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+set -eo pipefail; [[ $FIGURE_TRACE ]] && set -x
 
-ENV_FILE="$DOKKU_ROOT/$2/ENV"
-ENV_FILE_TEMP="$DOKKU_ROOT/$2/ENV.tmp"
+ENV_FILE="$FIGURE_ROOT/$2/ENV"
+ENV_FILE_TEMP="$FIGURE_ROOT/$2/ENV.tmp"
 config_create () {
   [ -f $ENV_FILE ] || {
     touch $ENV_FILE
@@ -41,7 +41,7 @@ config_write() {
   if ! cmp -s $ENV_FILE $ENV_FILE_TEMP; then
     cp -f $ENV_FILE_TEMP $ENV_FILE
     chmod 600 $ENV_FILE
-    dokku ps:restart $APP
+    figure ps:restart $APP
   fi
   rm -f $ENV_FILE_TEMP
 }
@@ -49,7 +49,7 @@ config_write() {
 case "$1" in
   config)
     [[ -z $2 ]] && echo "Please specify an app to run the command on" && exit 1
-    [[ ! -d "$DOKKU_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
+    [[ ! -d "$FIGURE_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
     APP="$2"
 
     config_create
@@ -70,11 +70,11 @@ case "$1" in
 
   config:get)
     [[ -z $2 ]] && echo "Please specify an app to run the command on" && exit 1
-    [[ ! -d "$DOKKU_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
+    [[ ! -d "$FIGURE_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
     APP="$2"
 
     if [[ -z $3 ]]; then
-      echo "Usage: dokku config:get APP KEY"
+      echo "Usage: figure config:get APP KEY"
       echo "Must specify KEY."
       exit 1
     fi
@@ -91,11 +91,11 @@ case "$1" in
 
   config:set)
     [[ -z $2 ]] && echo "Please specify an app to run the command on" && exit 1
-    [[ ! -d "$DOKKU_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
+    [[ ! -d "$FIGURE_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
     APP="$2"
 
     if [[ -z "${*:3}" ]]; then
-      echo "Usage: dokku config:set APP KEY1=VALUE1 [KEY2=VALUE2 ...]"
+      echo "Usage: figure config:set APP KEY1=VALUE1 [KEY2=VALUE2 ...]"
       echo "Must specify KEY and VALUE to set."
       exit 1
     fi
@@ -108,7 +108,7 @@ case "$1" in
 
     for var; do
       if [[ $var != *"="* ]]; then
-        echo "Usage: dokku config:set APP KEY1=VALUE1 [KEY2=VALUE2 ...]"
+        echo "Usage: figure config:set APP KEY1=VALUE1 [KEY2=VALUE2 ...]"
         echo "Must specify KEY and VALUE to set."
         exit 1
       fi
@@ -139,11 +139,11 @@ ${var}"
 
   config:unset)
     [[ -z $2 ]] && echo "Please specify an app to run the command on" && exit 1
-    [[ ! -d "$DOKKU_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
+    [[ ! -d "$FIGURE_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
     APP="$2"
 
     if [[ -z $3 ]]; then
-      echo "Usage: dokku config:unset APP KEY1 [KEY2 ...]"
+      echo "Usage: figure config:unset APP KEY1 [KEY2 ...]"
       echo "Must specify KEY to unset."
       exit 1
     fi
@@ -170,7 +170,7 @@ EOF
     ;;
 
   *)
-    exit $DOKKU_NOT_IMPLEMENTED_EXIT
+    exit $FIGURE_NOT_IMPLEMENTED_EXIT
     ;;
 
 esac

@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+set -eo pipefail; [[ $FIGURE_TRACE ]] && set -x
 
 APP="$1"; PORT="$2"; IP="$3"
 
-set +e; NO_VHOST=$(dokku config:get $APP NO_VHOST); set -e
+set +e; NO_VHOST=$(figure config:get $APP NO_VHOST); set -e
 
 if [[ -n "$NO_VHOST" ]]; then
   echo "-----> NO_VHOST config detected"
-elif [[ ! -f "$DOKKU_ROOT/$APP/VHOST" ]]; then
-  dokku domains:setup $APP
+elif [[ ! -f "$FIGURE_ROOT/$APP/VHOST" ]]; then
+  figure domains:setup $APP
 fi
 
-dokku nginx:build-config $APP $PORT $IP
+figure nginx:build-config $APP $PORT $IP

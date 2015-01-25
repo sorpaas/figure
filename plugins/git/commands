@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+set -eo pipefail; [[ $FIGURE_TRACE ]] && set -x
 
 git_archive_all() {
   APP=$1; REV=$2
   TMP_WORK_DIR=$(mktemp -d)
   chmod 755 $TMP_WORK_DIR
   unset GIT_DIR GIT_WORK_TREE
-  git clone -q $DOKKU_ROOT/$APP $TMP_WORK_DIR &> /dev/null
+  git clone -q $FIGURE_ROOT/$APP $TMP_WORK_DIR &> /dev/null
   pushd $TMP_WORK_DIR > /dev/null
   git config advice.detachedHead false
   git checkout $REV &> /dev/null
@@ -26,10 +26,10 @@ case "$1" in
       # Only run this script for the master branch. You can remove this
       # if block if you wish to run it for others as well.
       if [[ $refname = "refs/heads/master" ]] ; then
-        git_archive_all $APP $newrev | dokku receive $APP | sed -u "s/^/"$'\e[1G'"/"
+        git_archive_all $APP $newrev | figure receive $APP | sed -u "s/^/"$'\e[1G'"/"
       else
         echo $'\e[1G\e[K'"-----> WARNING: deploy did not complete, you must push to master."
-        echo $'\e[1G\e[K'"-----> for example, try 'git push <dokku> ${refname/refs\/heads\/}:master'"
+        echo $'\e[1G\e[K'"-----> for example, try 'git push <figure> ${refname/refs\/heads\/}:master'"
       fi
     done
     ;;
@@ -37,13 +37,13 @@ case "$1" in
   git-upload-pack)
     APP="$(echo $2 | perl -pe 's/(?<!\\)'\''//g' | sed 's/\\'\''/'\''/g')"
     pluginhook git-pre-pull $APP
-    cat | git-upload-pack "$DOKKU_ROOT/$APP"
+    cat | git-upload-pack "$FIGURE_ROOT/$APP"
     pluginhook git-post-pull $APP
     ;;
 
   git-*)
     APP="$(echo $2 | perl -pe 's/(?<!\\)'\''//g' | sed 's/\\'\''/'\''/g')"
-    APP_PATH=$DOKKU_ROOT/$APP
+    APP_PATH=$FIGURE_ROOT/$APP
 
     if [[ $1 == "git-receive-pack" && ! -d "$APP_PATH/refs" ]]; then
       git init --bare $APP_PATH > /dev/null
@@ -52,7 +52,7 @@ case "$1" in
 #!/usr/bin/env bash
 set -e; set -o pipefail;
 
-cat | DOKKU_ROOT="$DOKKU_ROOT" dokku git-hook $APP
+cat | FIGURE_ROOT="$FIGURE_ROOT" figure git-hook $APP
 EOF
       chmod +x $PRERECEIVE_HOOK
     fi
@@ -66,7 +66,7 @@ EOF
     ;;
 
   *)
-    exit $DOKKU_NOT_IMPLEMENTED_EXIT
+    exit $FIGURE_NOT_IMPLEMENTED_EXIT
     ;;
 
 esac

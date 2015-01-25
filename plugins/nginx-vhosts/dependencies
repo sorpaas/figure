@@ -1,7 +1,7 @@
 #!/bin/bash
-set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+set -eo pipefail; [[ $FIGURE_TRACE ]] && set -x
 
-case "$DOKKU_DISTRO" in
+case "$FIGURE_DISTRO" in
   ubuntu)
     export DEBIAN_FRONTEND=noninteractive
     [[ -z "$CIRCLECI" ]] && apt-get install -qq -y software-properties-common python-software-properties

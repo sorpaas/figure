@@ -1,89 +1,77 @@
 #!/usr/bin/env bash
-set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+set -eo pipefail; [[ $FIGURE_TRACE ]] && set -x
 
 case "$1" in
   trace)
-    [[ -d $DOKKU_ROOT/.dokkurc ]] || mkdir -p $DOKKU_ROOT/.dokkurc
+    [[ -d $FIGURE_ROOT/.figurerc ]] || mkdir -p $FIGURE_ROOT/.figurerc
     [[ "$2" == "on" ]] || [[ "$2" == "off" ]] || {
       echo "Valid trace options are [on/off]"
       exit 1
     }
 
     if [[ "$2" == "on" ]]; then
-      echo "Enabling dokku trace"
-      echo "export DOKKU_TRACE=1" > $DOKKU_ROOT/.dokkurc/DOKKU_TRACE
+      echo "Enabling figure trace"
+      echo "export FIGURE_TRACE=1" > $FIGURE_ROOT/.figurerc/FIGURE_TRACE
     fi
 
     if [[ "$2" == "off" ]]; then
-      echo "Disabling dokku trace"
-      rm -f $DOKKU_ROOT/.dokkurc/DOKKU_TRACE
+      echo "Disabling figure trace"
+      rm -f $FIGURE_ROOT/.figurerc/FIGURE_TRACE
     fi
     ;;
 
   delete)
-    dokku apps:destroy $2
+    figure apps:destroy $2
     ;;
 
   logs)
     [[ -z $2 ]] && echo "Please specify an app to run the command on" && exit 1
-    [[ ! -d "$DOKKU_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
-    APP="$2";
+    [[ ! -d "$FIGURE_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
+    APP="$2"; APP_DIR="$FIGURE_ROOT/$APP"
 
-    if [[ -f "$DOKKU_ROOT/$APP/CONTAINER" ]]; then
-      CONTAINER=$(<$DOKKU_ROOT/$APP/CONTAINER)
-      if [[ $3 == "-t" ]]; then
-        docker logs --follow $CONTAINER
-      else
-        docker logs $CONTAINER | tail -n 100
-      fi
-    else
-      echo "Application's container not found"
-    fi
+    cd $APP_DIR && fig logs
     ;;
 
   run)
     [[ -z $2 ]] && echo "Please specify an app to run the command on" && exit 1
-    [[ ! -d "$DOKKU_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
-    APP="$2"; IMAGE="dokku/$APP"
+    [[ -z $3 ]] && echo "Please specify an container to run the command on" && exit 1
+    [[ ! -d "$FIGURE_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
+    APP="$2"; APP_DIR="$FIGURE_ROOT/$APP"; CONTAINER="$3"
 
-    shift 2
-
-    DOCKER_ARGS=$(: | pluginhook docker-args $APP run)
-    # if we have a prompt, then we have a tty according to the LDP (http://www.tldp.org/LDP/abs/html/intandnonint.html)
-    [[ ! -z "$PS1" ]] && DOKKU_RUN_OPTS="-i -t"
-    docker run $DOKKU_RUN_OPTS $DOCKER_ARGS $IMAGE /exec "$@"
+    shift 3
+    cd $APP_DIR && fig run $CONTAINER "$@"
     ;;
 
   url | urls)
     [[ -z $2 ]] && echo "Please specify an app to run the command on" && exit 1
-    [[ ! -d "$DOKKU_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
-    APP="$2"; SCHEME="http"; SSL="$DOKKU_ROOT/$APP/tls"; WILDCARD_SSL="$DOKKU_ROOT/tls"
+    [[ ! -d "$FIGURE_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
+    APP="$2"; SCHEME="http"; SSL="$FIGURE_ROOT/$APP/tls"; WILDCARD_SSL="$FIGURE_ROOT/tls"
 
     if [[ -e "$SSL/server.crt" && -e "$SSL/server.key" ]] || [[ -e "$WILDCARD_SSL/server.crt" && -e "$WILDCARD_SSL/server.key" ]]; then
       SCHEME="https"
     fi
 
-    if [[ -f "$DOKKU_ROOT/$APP/VHOST" ]]; then
+    if [[ -f "$FIGURE_ROOT/$APP/VHOST" ]]; then
       case "$1" in
         url)
-          echo "$SCHEME://$(head -n1 "$DOKKU_ROOT/$APP/VHOST")"
+          echo "$SCHEME://$(head -n1 "$FIGURE_ROOT/$APP/VHOST")"
         ;;
         urls)
-          for vhost in $(< "$DOKKU_ROOT/$APP/VHOST"); do
+          for vhost in $(< "$FIGURE_ROOT/$APP/VHOST"); do
             echo "$SCHEME://$vhost"
           done
         ;;
       esac
-    elif [[ -f "$DOKKU_ROOT/VHOST" ]]; then
-      echo "$SCHEME://$(< "$DOKKU_ROOT/VHOST")"
+    elif [[ -f "$FIGURE_ROOT/VHOST" ]]; then
+      echo "$SCHEME://$(< "$FIGURE_ROOT/VHOST")"
     else
-      echo "$SCHEME://$(< "$DOKKU_ROOT/HOSTNAME"):$(< "$DOKKU_ROOT/$APP/PORT")"
+      echo "$SCHEME://$(< "$FIGURE_ROOT/HOSTNAME"):$(< "$FIGURE_ROOT/$APP/PORT")"
     fi
   ;;
 
   version)
-    cat "$DOKKU_ROOT/VERSION" || {
-      echo "Unable to determine dokku's version" 2>&1
+    cat "$FIGURE_ROOT/VERSION" || {
+      echo "Unable to determine figure's version" 2>&1
       exit 1
     }
     ;;
@@ -94,12 +82,12 @@ case "$1" in
     run <app> <cmd>                                 Run a command in the environment of an application
     url <app>                                       Show the first URL for an application (compatibility)
     urls <app>                                      Show all URLs for an application
-    version                                         Print dokku's version
+    version                                         Print figure's version
 EOF
     ;;
 
   *)
-    exit $DOKKU_NOT_IMPLEMENTED_EXIT
+    exit $FIGURE_NOT_IMPLEMENTED_EXIT
     ;;
 
 esac

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+set -eo pipefail; [[ $FIGURE_TRACE ]] && set -x
 
 RE_IPV4="([0-9]{1,3}[\.]){3}[0-9]{1,3}"
 
@@ -19,30 +19,30 @@ RE_IPV6="${RE_IPV6}([0-9a-fA-F]{1,4}:){1,4}:${RE_IPV4}"                # TEST: 2
 case "$1" in
   domains)
     [[ -z $2 ]] && echo "Please specify an app to run the command on" && exit 1
-    [[ ! -d "$DOKKU_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
+    [[ ! -d "$FIGURE_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
     APP="$2"
 
-    dokku domains:setup $APP
+    figure domains:setup $APP
     echo "=== $APP Domain Names"
-    cat "$DOKKU_ROOT/$APP/VHOST"
+    cat "$FIGURE_ROOT/$APP/VHOST"
     ;;
 
   domains:setup)
     [[ -z $2 ]] && echo "Please specify an app to run the command on" && exit 1
-    [[ ! -d "$DOKKU_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
-    APP="$2"; VHOST_PATH="$DOKKU_ROOT/$APP/VHOST"
+    [[ ! -d "$FIGURE_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
+    APP="$2"; VHOST_PATH="$FIGURE_ROOT/$APP/VHOST"
 
     if [[ ! -f $VHOST_PATH ]]; then
-      if [[ -f "$DOKKU_ROOT/VHOST" ]];then
-        VHOST=$(< "$DOKKU_ROOT/VHOST")
+      if [[ -f "$FIGURE_ROOT/VHOST" ]];then
+        VHOST=$(< "$FIGURE_ROOT/VHOST")
       else
-        VHOST=$(< "$DOKKU_ROOT/HOSTNAME")
+        VHOST=$(< "$FIGURE_ROOT/HOSTNAME")
       fi
       if [[ "$VHOST" =~ $RE_IPV4 ]] || [[ "$VHOST" =~ $RE_IPV6 ]];then
         echo "unsupported vhost config found. disabling vhost support"
-        [[ ! $(grep -q NO_VHOST "$DOKKU_ROOT/$APP/ENV") ]] && echo "export NO_VHOST='1'" >> "$DOKKU_ROOT/$APP/ENV"
+        [[ ! $(grep -q NO_VHOST "$FIGURE_ROOT/$APP/ENV") ]] && echo "export NO_VHOST='1'" >> "$FIGURE_ROOT/$APP/ENV"
       else
-        if [[ -f "$DOKKU_ROOT/VHOST" ]]; then
+        if [[ -f "$FIGURE_ROOT/VHOST" ]]; then
           echo "-----> Creating new $VHOST_PATH..."
           SUBDOMAIN=${APP/%\.${VHOST}/}
           hostname=$(: | pluginhook nginx-hostname $APP $SUBDOMAIN $VHOST)
@@ -62,24 +62,24 @@ case "$1" in
 
   domains:add)
     [[ -z $2 ]] && echo "Please specify an app to run the command on" && exit 1
-    [[ ! -d "$DOKKU_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
+    [[ ! -d "$FIGURE_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
     APP="$2"
 
     if [[ -z $3 ]]; then
-      echo "Usage: dokku $1 $APP DOMAIN"
+      echo "Usage: figure $1 $APP DOMAIN"
       echo "Must specify DOMAIN."
       exit 1
     fi
 
-    if [[ $(egrep ^"$3"$ "$DOKKU_ROOT/$APP/VHOST" > /dev/null 2>&1; echo $?) -eq 0 ]]; then
+    if [[ $(egrep ^"$3"$ "$FIGURE_ROOT/$APP/VHOST" > /dev/null 2>&1; echo $?) -eq 0 ]]; then
       echo "$3 is already defined for $APP"
       exit 1
     fi
 
-    dokku domains:setup $APP
-    echo "$3" >> "$DOKKU_ROOT/$APP/VHOST"
+    figure domains:setup $APP
+    echo "$3" >> "$FIGURE_ROOT/$APP/VHOST"
     # we need to restart the app to make sure we're binding to the appropriate network interface
-    dokku ps:restart $APP
+    figure ps:restart $APP
     pluginhook post-domains-update $APP
     echo "-----> Added $3 to $APP"
 
@@ -87,11 +87,11 @@ case "$1" in
 
   domains:clear)
     [[ -z $2 ]] && echo "Please specify an app to run the command on" && exit 1
-    [[ ! -d "$DOKKU_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
+    [[ ! -d "$FIGURE_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
     APP="$2"
 
-    rm -f "$DOKKU_ROOT/$APP/VHOST"
-    dokku domains:setup $APP
+    rm -f "$FIGURE_ROOT/$APP/VHOST"
+    figure domains:setup $APP
     pluginhook post-domains-update $APP
     echo "-----> Cleared domains in $APP"
 
@@ -99,17 +99,17 @@ case "$1" in
 
   domains:remove)
     [[ -z $2 ]] && echo "Please specify an app to run the command on" && exit 1
-    [[ ! -d "$DOKKU_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
+    [[ ! -d "$FIGURE_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
     APP="$2"
 
     if [[ -z $3 ]]; then
-      echo "Usage: dokku $1 $2 DOMAIN"
+      echo "Usage: figure $1 $2 DOMAIN"
       echo "Must specify DOMAIN."
       exit 1
     fi
 
-    dokku domains:setup $APP
-    sed -i "/^$3$/d" "$DOKKU_ROOT/$APP/VHOST"
+    figure domains:setup $APP
+    sed -i "/^$3$/d" "$FIGURE_ROOT/$APP/VHOST"
     pluginhook post-domains-update $APP
     echo "-----> Removed $3 from $APP"
 
@@ -125,7 +125,7 @@ EOF
     ;;
 
   *)
-    exit $DOKKU_NOT_IMPLEMENTED_EXIT
+    exit $FIGURE_NOT_IMPLEMENTED_EXIT
     ;;
 
 esac

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+set -eo pipefail; [[ $FIGURE_TRACE ]] && set -x
 
 VERSION="$1"
 IMPORT_DIR="$2"
@@ -14,7 +14,7 @@ while read APP; do
 #!/usr/bin/env bash
 set -e; set -o pipefail;
 
-cat | DOKKU_ROOT="$DOKKU_ROOT" dokku git-hook $APP
+cat | FIGURE_ROOT="$FIGURE_ROOT" figure git-hook $APP
 EOF
   chmod +x $PRERECEIVE_HOOK
 done < $APPS > /dev/null
