@@ -26,8 +26,8 @@ case "$1" in
     VOLUME_LOCATION="$FIGURE_ROOT/$APP/volumes/$CONTAINER$CONTAINER_LOCATION"
 
     mkdir -p "$FIGURE_ROOT/$APP/volumes/$CONTAINER"
-    sudo mkdir -p $VOLUME_LOCATION
-    sudo cp -r $LOCATION $VOLUME_LOCATION
+    sudo mkdir -p "$VOLUME_LOCATION"
+    sudo cp -r "$LOCATION/*" "$VOLUME_LOCATION"
     echo "Copying volume... done"
     ;;
 
