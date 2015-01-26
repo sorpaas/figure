@@ -73,17 +73,21 @@ case "$1" in
 
     figure ps:restart $APP
 
+    trap -        INT TERM EXIT
+    ;;
+
+  post-deploy)
+    APP="$2"; APP_DIR="$FIGURE_ROOT/$APP/app"
     cd $APP_DIR
+
+    FIG_ARGS=$(: | pluginhook fig-args $APP up)
+    fig $FIG_ARGS up -d
 
     expose_port=$(cat fig.yml | shyaml get-value web.ports.0)
     IFS=':' read -a expose_port_arr <<< $expose_port
     private_port=${expose_port_arr[${#expose_port_arr[@]}-1]}
 
     FIG_ARGS=$(: | pluginhook fig-args $APP port)
-    until fig $FIG_ARGS port web $private_port; do
-        echo "Process not started. Retrying ..."
-        sleep 2
-    done
     ipaddr_port=$(fig $FIG_ARGS port web $private_port)
     IFS=':' read -a ipaddr_port_arr <<< $ipaddr_port
     ipaddr="127.0.0.1"
@@ -93,8 +97,17 @@ case "$1" in
 
     echo "-----> Running post-deploy"
     pluginhook post-deploy  $APP $port $ipaddr
-    trap -        INT TERM EXIT
 
+    FIG_ARGS=$(: | pluginhook fig-args $APP ps)
+    ps=$(fig $FIG_ARGS ps | sed "1 d" | sed "1 d" | awk -F" " '{print $1}')
+
+    set -m
+    (
+        for container in $ps; do
+            (docker wait $container || kill 0) &
+        done
+        wait
+    )
     ;;
 
   cleanup)

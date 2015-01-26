@@ -23,7 +23,7 @@ case "$1" in
     FIG_ARGS=$(: | pluginhook fig-args $APP up)
     cat << CONF >> /etc/supervisor/conf.d/figure-$APP.conf
 [program:figure-${APP}]
-command=/bin/bash -c 'cd ${APP_DIR} && fig ${FIG_ARGS} up'
+command=/usr/local/bin/figure post-deploy $APP
 autostart=true
 autorestart=true
 stopsignal=QUIT
