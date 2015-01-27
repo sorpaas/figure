@@ -43,6 +43,7 @@ CONF
 
     figure ps:config $APP
 
+    pluginhook pre-deploy $APP
     supervisorctl start figure-$APP
     ;;
 
@@ -71,6 +72,7 @@ CONF
     FIG_ARGS=$(: | pluginhook fig-args $APP stop)
     cd $APP_DIR && fig $FIG_ARGS stop
 
+    pluginhook pre-deploy $APP
     supervisorctl start figure-$APP
     ;;
 
