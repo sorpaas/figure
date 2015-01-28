@@ -12,5 +12,5 @@ if [ $? -ne 0 ]; then
 fi
 
 for file in $files; do
-    touch -t 200001010000.00 $file
+    touch -t 200001010000.00 "$file"
 done
