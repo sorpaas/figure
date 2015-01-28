@@ -101,15 +101,17 @@ case "$1" in
     FIG_ARGS=$(: | pluginhook fig-args $APP ps)
     ps=$(fig $FIG_ARGS ps | sed "1 d" | sed "1 d" | awk -F" " '{print $1}')
 
-    trap -        INT TERM EXIT
-
+    echo "-----> Figure started successful, waiting for them ..."
     set -m
     (
         for container in $ps; do
-            (docker wait $container || kill 0) &
+            echo "       Container $container ..."
+            (docker wait $container || (echo "       Container $container exited" && kill 0)) &
         done
         wait
     )
+
+    echo "-----> Exiting ..."
     ;;
 
   cleanup)
