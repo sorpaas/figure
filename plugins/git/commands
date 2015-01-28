@@ -13,7 +13,11 @@ git_archive_all() {
   pushd $APP_DIR > /dev/null
   git config advice.detachedHead false
   git checkout $REV &> /dev/null
-  git submodule update --init --recursive &> /dev/null
+
+  if ! git submodule update --init --recursive &> /dev/null; then
+    echo "Init submodules failed. Please fix your repo."
+    exit 1
+  fi
   find -name .git -prune -exec rm -rf {} \; > /dev/null
 
   popd > /dev/null
@@ -28,7 +32,7 @@ case "$1" in
       # Only run this script for the master branch. You can remove this
       # if block if you wish to run it for others as well.
       if [[ $refname = "refs/heads/master" ]] ; then
-        git_archive_all $APP $newrev > /dev/null
+        git_archive_all $APP $newrev | sed -u "s/^/"$'\e[1G'"/"
         figure receive $APP | sed -u "s/^/"$'\e[1G'"/"
       else
         echo $'\e[1G\e[K'"-----> WARNING: deploy did not complete, you must push to master."
