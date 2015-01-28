@@ -99,7 +99,7 @@ case "$1" in
     pluginhook post-deploy  $APP $port $ipaddr
 
     FIG_ARGS=$(: | pluginhook fig-args $APP ps)
-    ps=$(fig $FIG_ARGS ps | sed "1 d" | sed "1 d" | awk -F" " '{print $1}')
+    ps=$(fig $FIG_ARGS ps -q)
 
     echo "-----> Figure started successful, waiting for them ..."
     set -m
