@@ -101,6 +101,8 @@ case "$1" in
     FIG_ARGS=$(: | pluginhook fig-args $APP ps)
     ps=$(fig $FIG_ARGS ps | sed "1 d" | sed "1 d" | awk -F" " '{print $1}')
 
+    trap -        INT TERM EXIT
+
     set -m
     (
         for container in $ps; do
@@ -108,8 +110,6 @@ case "$1" in
         done
         wait
     )
-
-    trap -        INT TERM EXIT
     ;;
 
   cleanup)
