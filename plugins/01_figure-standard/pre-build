@@ -11,4 +11,6 @@ if [ $? -ne 0 ]; then
   exit 0
 fi
 
-cat files | xargs touch -t 200001010000.00
+for file in $files; do
+    touch -t 200001010000.00 $file
+done
