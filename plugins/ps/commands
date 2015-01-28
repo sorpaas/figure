@@ -26,7 +26,6 @@ case "$1" in
 command=/usr/local/bin/figure post-deploy $APP
 autostart=true
 autorestart=true
-stopsignal=QUIT
 user=figure
 
 CONF

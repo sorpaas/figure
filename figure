@@ -108,6 +108,8 @@ case "$1" in
         done
         wait
     )
+
+    trap -        INT TERM EXIT
     ;;
 
   cleanup)
