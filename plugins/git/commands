@@ -3,18 +3,20 @@ set -eo pipefail; [[ $FIGURE_TRACE ]] && set -x
 
 git_archive_all() {
   APP=$1; REV=$2
-  TMP_WORK_DIR=$(mktemp -d)
-  chmod 755 $TMP_WORK_DIR
+  APP_DIR="$FIGURE_ROOT/$APP/app"
   unset GIT_DIR GIT_WORK_TREE
-  git clone -q $FIGURE_ROOT/$APP $TMP_WORK_DIR &> /dev/null
-  pushd $TMP_WORK_DIR > /dev/null
+
+  sudo rm --rf $APP_DIR
+  mkdir -p $APP_DIR
+
+  git clone -q $FIGURE_ROOT/$APP $APP_DIR &> /dev/null
+  pushd $APP_DIR > /dev/null
   git config advice.detachedHead false
   git checkout $REV &> /dev/null
   git submodule update --init --recursive &> /dev/null
   find -name .git -prune -exec rm -rf {} \; > /dev/null
-  tar c .
+
   popd > /dev/null
-  rm -rf $TMP_WORK_DIR > /dev/null
 }
 
 case "$1" in
@@ -26,7 +28,8 @@ case "$1" in
       # Only run this script for the master branch. You can remove this
       # if block if you wish to run it for others as well.
       if [[ $refname = "refs/heads/master" ]] ; then
-        git_archive_all $APP $newrev | figure receive $APP | sed -u "s/^/"$'\e[1G'"/"
+        git_archive_all $APP $newrev > /dev/null
+        figure receive $APP | sed -u "s/^/"$'\e[1G'"/"
       else
         echo $'\e[1G\e[K'"-----> WARNING: deploy did not complete, you must push to master."
         echo $'\e[1G\e[K'"-----> for example, try 'git push <figure> ${refname/refs\/heads\/}:master'"

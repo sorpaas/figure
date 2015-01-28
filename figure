@@ -38,7 +38,7 @@ case "$1" in
     echo "-----> Cleaning up ..."
     figure cleanup
     echo "-----> Building $APP ..."
-    cat | figure build $APP
+    figure build $APP
     echo "-----> Deploying $APP ..."
     figure deploy $APP
     echo "=====> Application deployed:"
@@ -49,10 +49,6 @@ case "$1" in
   build)
     APP="$2"; CACHE_DIR="$FIGURE_ROOT/$APP/cache"
     APP_DIR="$FIGURE_ROOT/$APP/app"
-
-    sudo rm -rf $APP_DIR
-    mkdir -p $APP_DIR
-    cat | tar -xC $APP_DIR
 
     pluginhook pre-build $APP
 
