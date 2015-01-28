@@ -27,7 +27,7 @@ case "$1" in
   logs)
     [[ -z $2 ]] && echo "Please specify an app to run the command on" && exit 1
     [[ ! -d "$FIGURE_ROOT/$2" ]] && echo "App $2 does not exist" && exit 1
-    APP="$2"; APP_DIR="$FIGURE_ROOT/$APP"
+    APP="$2"; APP_DIR="$FIGURE_ROOT/$APP/app"
 
     FIG_ARGS=$(: | pluginhook fig-args $APP build)
     cd $APP_DIR && fig $FIG_ARGS logs
