@@ -3,4 +3,12 @@
 APP="$1"; APP_DIR="$FIGURE_ROOT/$APP/app"
 
 echo "Reset timestamps on git working directory files ..."
-cd $APP_DIR && find $APP_DIR | xargs touch -t 200001010000.00
+cd $APP_DIR
+
+files=$(find $APP_DIR)
+if [ $? -ne 0 ]; then
+  echo "Find failed to execute, it's wired ..."
+  exit 0
+fi
+
+cat files | xargs touch -t 200001010000.00
