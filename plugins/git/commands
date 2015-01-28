@@ -6,7 +6,7 @@ git_archive_all() {
   APP_DIR="$FIGURE_ROOT/$APP/app"
   unset GIT_DIR GIT_WORK_TREE
 
-  sudo rm --rf $APP_DIR
+  sudo rm -rf $APP_DIR
   mkdir -p $APP_DIR
 
   git clone -q $FIGURE_ROOT/$APP $APP_DIR &> /dev/null
