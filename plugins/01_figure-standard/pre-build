@@ -5,5 +5,5 @@ require "fileutils"
 @app_dir = "#{ENV['FIGURE_ROOT']}/#{ARGV[0]}/app"
 
 Dir.glob("#{@app_dir}/**/*").each do |file|
-  FileUtils.touch file, :mtime => 200001010000.00
+  FileUtils.touch file, :mtime => Time.new(2010, 01, 01)
 end
