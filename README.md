@@ -14,6 +14,8 @@ The current version of Figure only supports Ubuntu. To install it on your server
 2. Clone the repo by `git clone https://github.com/project-nsmg/figure`.
 3. Run `make install` as root.
 4. Run `cat ~/.ssh/id_rsa.pub | ssh {YOUR_SERVER_IP} "sudo sshcommand acl-add figure $USER"` in your local server to upload your public key.
+5. Add `figure ALL=(ALL) NOPASSWD:ALL` to sudoer file.
+6. Change content in `/home/figure/VHOST` to the domain you want to serve.
 
 That's it!
 
