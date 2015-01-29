@@ -60,6 +60,8 @@ end
         env_value = env_value[1..-2]
       end
 
+      env_content = "#{env_name}=#{env_value}"
+
       if container_config["environment"].instance_of? Hash
         container_config["environment"][env_name] = env_value
       elsif container_config["environment"].instance_of? Array
