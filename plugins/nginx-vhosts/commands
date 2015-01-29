@@ -40,7 +40,11 @@ EOF
 )
       elif  [[ -e "$WILDCARD_SSL/server.crt" ]] && [[ -e "$WILDCARD_SSL/server.key" ]]; then
         SSL_INUSE="$WILDCARD_SSL"
-        SSL_DIRECTIVES=""
+        SSL_DIRECTIVES=$(cat <<EOF
+  ssl_certificate $FIGURE_ROOT/tls/server.crt;
+  ssl_certificate_key $FIGURE_ROOT/tls/server.key;
+EOF
+)
       fi
 
       NGINX_CONF="$PLUGIN_PATH/nginx-vhosts/templates/nginx.conf"

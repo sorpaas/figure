@@ -28,8 +28,6 @@ ssl_protocols TLSv1.2 TLSv1.1 TLSv1;
 
 ssl_prefer_server_ciphers on;
 
-ssl_certificate $FIGURE_ROOT/tls/server.crt;
-ssl_certificate_key $FIGURE_ROOT/tls/server.key;
 EOF
 fi
 
