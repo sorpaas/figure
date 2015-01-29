@@ -53,8 +53,8 @@ end
         abort "Bad ENV file. Deployment failed."
       end
 
-      env_name = env_content.partition("=").first
-      env_value = env_content.partition("=").last
+      env_name = env_content.partition("=").first.strip
+      env_value = env_content.partition("=").last.strip
 
       if env_value.start_with? "'" and env_value.end_with? "'"
         env_value = env_value[1..-2]
