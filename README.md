@@ -1,6 +1,6 @@
 # Figure
 
-Fig powered mini-Heroku. Inspired by [Dokku](https://github.com/progrium/dokku).
+Fig-powered mini-Heroku. Inspired by [Dokku](https://github.com/progrium/dokku).
 
 ## What is it?
 
