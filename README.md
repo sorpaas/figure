@@ -14,7 +14,7 @@ This demo shows how easy it is to deploy the [Let's Chat](https://github.com/sde
 2. Clone the Let's Chat repo `git clone https://github.com/sdelements/lets-chat`.
 3. Figure requires a service named `web` defined in `fig.yml`. So you need to change the fig.yml slightly. Also, you can create a volume for mongo to keep the data. The final fig.yml may look as follows:
 
-```
+    ```
     # Let's Chat application
     web:
       build: .
@@ -28,15 +28,15 @@ This demo shows how easy it is to deploy the [Let's Chat](https://github.com/sde
       image: mongo:latest
       volumes:
         - .docker/db:/data/db
-```
+    ```
 
 4. Commit the fig.yml file. Add Figure server for pushing.
 
-```
+    ```
     git add fig.yml
     git commit -m "adopt for figure deployment"
     git remote add figure figure@<your-server-address>:<app-name>
-```
+    ```
 
 5. Run `git push`. The application will be live at `http://<app-name>.<your-server-address>`.
 
