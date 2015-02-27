@@ -5,6 +5,7 @@ require 'yaml'
 @app_url = "#{ENV['FIGURE_ROOT']}/#{ARGV[0]}/app"
 @fig_config_url = "#{@app_url}/fig.yml"
 @env_config_url = "#{ENV['FIGURE_ROOT']}/#{ARGV[0]}/ENV"
+@skip_volumes = (File.exists? "#{@app_url}/SKIP_VOLUMES")
 
 if not File.exists? @fig_config_url
   abort "No fig.yml file found. Deployment failed."
@@ -21,7 +22,7 @@ end
   end
 
   # Update volumes to mount in a specific location
-  if container_config["volumes"]
+  if container_config["volumes"] and not @skip_volumes
     container_config["volumes"].delete_if do |x|
       x.split(":")[0] == "."
     end
