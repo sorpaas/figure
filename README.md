@@ -45,11 +45,12 @@ This demo shows how easy it is to deploy the [Let's Chat](https://github.com/sde
 The current version of Figure only supports Ubuntu. To install it on your server:
 
 1. Install `make`, `git` and `ruby`.
-2. Clone the repo by `git clone https://github.com/project-nsmg/figure`.
-3. Run `make install` as root.
-4. Run `cat ~/.ssh/id_rsa.pub | ssh {YOUR_SERVER_IP} "sudo sshcommand acl-add figure $USER"` in your local server to upload your public key.
-5. Add `figure ALL=(ALL) NOPASSWD:ALL` to sudoer file.
-6. Change content in `/home/figure/VHOST` to the domain you want to serve.
+2. If you want to run this on AWS, follow the instruction [here](https://github.com/dokku-alt/dokku-alt/issues/126) to enable AUFS.
+3. Clone the repo by `git clone https://github.com/project-nsmg/figure`.
+4. Run `make install` as root.
+5. Run `cat ~/.ssh/id_rsa.pub | ssh {YOUR_SERVER_IP} "sudo sshcommand acl-add figure $USER"` in your local server to upload your public key.
+6. Add `figure ALL=(ALL) NOPASSWD:ALL` to sudoer file.
+7. Change content in `/home/figure/VHOST` to the domain you want to serve.
 
 That's it!
 
