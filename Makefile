@@ -75,8 +75,8 @@ docker: aufs
 	apt-get install -qq -y curl
 	egrep -i "^docker" /etc/group || groupadd docker
 	usermod -aG docker figure
-	curl --silent https://get.docker.io/gpg | apt-key add -
-	echo deb http://get.docker.io/ubuntu docker main > /etc/apt/sources.list.d/docker.list
+	curl --silent --location https://get.docker.com/gpg | apt-key add -
+	echo deb https://get.docker.com/ubuntu docker main > /etc/apt/sources.list.d/docker.list
 	apt-get update
 ifdef DOCKER_VERSION
 	apt-get install -qq -y lxc-docker-${DOCKER_VERSION}
